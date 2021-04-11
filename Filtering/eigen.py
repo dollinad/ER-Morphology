@@ -28,6 +28,13 @@ def highlight(fileName, page):
     eigVals = getEigs(tempIm)
 
     width, height = im.size
+    
+    tube = 0
+    sheet = 0
+    
+    # Thresholds to change
+    highVal = 1E-8
+    lowVal = 1E-10
 
     # L, L => no structure just noise
     # H-, L OR H+, L => sheet like
@@ -42,16 +49,23 @@ def highlight(fileName, page):
             L3 = eigVals[0, x, y]
             L2 = eigVals[1, x, y]
             
-            HH = (L3 >= 1E-7) and (L2 >= 1E-7)
-            HH2 = (L3 <= -1E-7) and (L2 <= -1E-7)
+            highVal = 1E-7
+            lowVal = 1E-12
             
-            HL = (L3 >= 1E-7) and (L2 < 1E-12 or L2 > -1E-12)
-            HL2 = (L3 <= -1E-7) and (L2 < 1E-12 or L2 > -1E-12)
+            HH = (L3 >= highVal) and (L2 >= highVal)
+            HH2 = (L3 <= -highVal) and (L2 <= -highVal)
+            
+            HL = (L3 >= highVal) and (L2 < lowVal or L2 > -lowVal)
+            HL2 = (L3 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
 
             if HH or HH2:
                 im.putpixel((y, x), (255, 0, 0)) # tube
+                tube += 1
             elif HL or HL2:
                 im.putpixel((y, x), (0, 255, 0)) # sheet
+                sheet += 1
+                
+    print("Tubes:", tube, "Sheets:", sheet, ". Percentage sheets:", (sheet/(sheet+tube)*100), ". Percentage tubes:", (tube/(sheet+tube)*100))
 
 
     fig, ax = plt.subplots(ncols=2)
@@ -67,4 +81,4 @@ def highlight(fileName, page):
     plt.tight_layout()
     plt.show()
 
-highlight('data.tif', 20)
+highlight('data.tif', 12)
