@@ -12,7 +12,8 @@ def getEigs(im):
     H_elems = feature.hessian_matrix(frangiImg, sigma=1, mode='constant', cval=0, order='rc')
     eigVals = feature.hessian_matrix_eigvals(H_elems)
     
-    return eigVals
+    return eigVals, frangiImg
+    
 
 def highlight(fileName, page):
     im = Image.open(fileName)
@@ -20,12 +21,12 @@ def highlight(fileName, page):
 
     tempIm = im.copy()
     tempIm.mode = 'I'
-    tempIm.point(lambda i:i*(1./256)).convert('RGB').save('temp.jpeg')
-
-    im = Image.open('temp.jpeg')
-    original = im.copy()
-
-    eigVals = getEigs(tempIm)
+    tempIm = tempIm.point(lambda i:i*(1./256)).convert('RGB')
+    
+    eigVals, frangiImg = getEigs(im)
+    
+    im = tempIm
+    original = tempIm.copy()
 
     width, height = im.size
     
@@ -36,9 +37,6 @@ def highlight(fileName, page):
     highVal = 1E-8
     lowVal = 1E-10
     
-    I = np.array(im)
-    frangiImg = frangi(I)
-
     # L, L => no structure just noise
     # H-, L OR H+, L => sheet like
     # H+, H+ OR H-, H- => tube like
