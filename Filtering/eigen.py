@@ -35,10 +35,16 @@ def highlight(fileName, page):
     # Thresholds to change
     highVal = 1E-8
     lowVal = 1E-10
+    
+    I = np.array(im)
+    frangiImg = frangi(I)
 
     # L, L => no structure just noise
     # H-, L OR H+, L => sheet like
     # H+, H+ OR H-, H- => tube like
+    # 
+    # histogram
+    # => look at distribution of lambda
 
     # L is very close to zero
     # H- is farther from zero, but negative
@@ -68,12 +74,15 @@ def highlight(fileName, page):
     print("Tubes:", tube, "Sheets:", sheet, ". Percentage sheets:", (sheet/(sheet+tube)*100), ". Percentage tubes:", (tube/(sheet+tube)*100))
 
 
-    fig, ax = plt.subplots(ncols=2)
+    fig, ax = plt.subplots(ncols=3)
     ax[0].imshow(original)
     ax[0].set_title('Original Image')
+    
+    ax[1].imshow(frangiImg)
+    ax[1].set_title('Frangi Image')
 
-    ax[1].imshow(im, interpolation='nearest')
-    ax[1].set_title('Eigen highlighting')
+    ax[2].imshow(im)
+    ax[2].set_title('Eigen highlighting')
 
     for a in ax:
         a.axis('off')
@@ -81,4 +90,4 @@ def highlight(fileName, page):
     plt.tight_layout()
     plt.show()
 
-highlight('data.tif', 12)
+highlight('data.tif', 7)
