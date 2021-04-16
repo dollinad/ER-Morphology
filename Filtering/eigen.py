@@ -14,7 +14,6 @@ def getEigs(im):
     
     return eigVals, frangiImg
     
-
 def highlight(fileName, page):
     im = Image.open(fileName)
     im.seek(page)
@@ -55,10 +54,10 @@ def highlight(fileName, page):
             
             highVal = 1E-7
             lowVal = 1E-12
-            
+
             HH = (L3 >= highVal) and (L2 >= highVal)
             HH2 = (L3 <= -highVal) and (L2 <= -highVal)
-            
+
             HL = (L3 >= highVal) and (L2 < lowVal or L2 > -lowVal)
             HL2 = (L3 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
 
@@ -68,11 +67,9 @@ def highlight(fileName, page):
             elif HL or HL2:
                 im.putpixel((y, x), (0, 255, 0)) # sheet
                 sheet += 1
-                
-    print("Tubes:", tube, "Sheets:", sheet, ". Percentage sheets:", (sheet/(sheet+tube)*100), ". Percentage tubes:", (tube/(sheet+tube)*100))
-
 
     fig, ax = plt.subplots(ncols=3)
+    
     ax[0].imshow(original)
     ax[0].set_title('Original Image')
     
@@ -84,8 +81,5 @@ def highlight(fileName, page):
 
     for a in ax:
         a.axis('off')
-
-    plt.tight_layout()
-    plt.show()
-
-highlight('data.tif', 7)
+    
+    return fig
