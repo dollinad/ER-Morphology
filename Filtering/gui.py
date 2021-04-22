@@ -21,7 +21,7 @@ class ERGui(tk.Tk):
         self.selectBtnLabel = tk.StringVar()
         self.selectBtnLabel.set("Select ER .tif")
         self.selectBtn = tk.Button(self.canvas, textvariable=self.selectBtnLabel, width=45, command=lambda: self.openDialog(self.selectBtn))
-        self.selectBtn.pack(side=tk.TOP, padx=6, pady=8)
+        self.selectBtn.pack(side=tk.TOP, padx=6, pady=2)
         
         self.pageSlider = Scale(self.canvas, from_=0, to=50, length=500, orient=HORIZONTAL)
         self.pageSlider.set(5)
@@ -32,7 +32,7 @@ class ERGui(tk.Tk):
         filename = askopenfilename()
         self.execute(filename)
     
-    def execute(self, path, page=5):
+    def execute(self, path, page=0):
         fig = eigen.highlight(path, page)
         self.currentPath = path
         
@@ -40,7 +40,7 @@ class ERGui(tk.Tk):
         self.figure.draw()
         self.figure.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.selectBtnLabel.set("Select a different ER .tif")
-        self.pageSlider.pack(side=tk.BOTTOM, padx=6, pady=8)
+        self.pageSlider.pack(side=tk.BOTTOM, padx=2, pady=2)
         
     def changePage(self, val):
         self.figure.get_tk_widget().destroy()
