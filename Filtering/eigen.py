@@ -27,6 +27,9 @@ def highlight_3D(filename):
     im = Image.open(filename)
     width, height = im.size
     num_slices = 5 #im.n_frames
+    # cv2_im = cv2.imread(filename)
+    # eigvals, frangiImg = getEigs(cv2_im)
+    # print(eigvals[0])
 
     # Lambda1 < Lambda2 < Lambda3
     Lambda1, Lambda2, Lambda3 = getEigs3D(filename, num_slices)
@@ -80,6 +83,7 @@ def highlight_3D(filename):
                 elif is_sheet:
                     im.putpixel((y, x), (0, 255, 0)) # sheet
                     sheet += 1
+        images[z] = im
     
     im = images[0]
 
