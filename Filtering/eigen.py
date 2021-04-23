@@ -9,6 +9,7 @@ import matlab.engine
 import os
 import cv2
 import math
+import statistics
 eng = matlab.engine.start_matlab()
 
 
@@ -28,12 +29,12 @@ def getEigs3D(filename, num_slices):
 def highlight_3D(filename):
     im = Image.open(filename)
     width, height = im.size
-    num_slices = 2 #im.n_frames
+    num_slices = 5 #im.n_frames
     # cv2_im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     # eigVals, frangiImg = getEigs(cv2_im)
 
     # Lambda1 < Lambda2 < Lambda3
-    Lambda3, Lambda2, Lambda1 = getEigs3D(filename, num_slices)
+    Lambda1, Lambda2, Lambda3 = getEigs3D(filename, num_slices)
 
     tube = 0
     sheet = 0
@@ -44,6 +45,7 @@ def highlight_3D(filename):
     Lambda1 = np.array(Lambda1._data).reshape((num_slices, width, height))
     Lambda2 = np.array(Lambda2._data).reshape((num_slices, width, height))
     Lambda3 = np.array(Lambda3._data).reshape((num_slices, width, height))
+
     
     tempIm = im
     images = []
@@ -53,21 +55,16 @@ def highlight_3D(filename):
         im.seek(z)
         im.mode = 'I'
         im = im.point(lambda i:i*(1./256)).convert('RGB')
-        for x in range(width):
-            for y in range(height):
+        for x in range(width-1):
+            for y in range(height-1):
                 # L1 < L2 < L3
-                # sort eigenvalues
-                lambdas = [Lambda1[z, y, x], Lambda2[z, y, x], Lambda3[z, y, x]]
-                lambdas.sort
-                if(x == 671 and y == 942):
-                    print(lambdas)
-                L3 = lambdas[0]
-                L2 = lambdas[1]
-                L1 = lambdas[2]
+                L3 = Lambda3[z, y, x]
+                L2 = Lambda2[z, y, x]
+                L1 = Lambda1[z, y, x]
 
                 #check tube / sheet conditions
-
-                if abs(L3) > abs(L1)*2 and abs(L2) > abs(L1)*2 and L1*L2 > 0 and  im.getpixel((y,x)) != (0, 0, 0):
+                threshold = 2
+                if math.isclose(abs(L1), 0, abs_tol=abs(0.4*L3)) and math.isclose(abs(L2), 0, abs_tol=abs(L3*0.4)) and im.getpixel((y,x)) != (0, 0, 0):
                     im.putpixel((y, x), (255, 0, 0)) # tube
                     tube += 1
         images.append(im)

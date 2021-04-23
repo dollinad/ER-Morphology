@@ -1,5 +1,6 @@
 function [Lambda1, Lambda2, Lambda3] = get_eig_vals_3D(filename, numImgs)
 
+disp("--- Matlab Calculations --- ")
 vol = [];
 
 % Loop over all the images in the folder.
@@ -22,3 +23,4 @@ disp("Calculating Eigenvalues");
 %slice(vol, round(size(vol,2)/2), round(size(vol,1)/2), round(size(vol,3)/2));
 %axis image; colormap gray;
 %shading flat;   
+disp("--- Exiting Matlab Calculations --- ")
