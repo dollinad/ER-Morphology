@@ -27,11 +27,28 @@ def getEigs3D(filename, num_slices):
     Lambda1, Lambda2, Lambda3 = eng.get_eig_vals_3D(filename, num_slices, nargout=3)
     return Lambda1, Lambda2, Lambda3
 
-def highlight_3D(filename, num_slices, image_to_display):
+
+def getFig_3D(originalImage, image, sliceIndex):
+    fig, ax = plt.subplots(ncols=2)
+    ax[0].imshow(originalImage[sliceIndex])
+    ax[0].set_title('Original Image')
+    ax[1].imshow(image[sliceIndex])
+    ax[1].set_title('Highlighted Image')
+    plt.axis('off')
+    plt.tight_layout()
+    
+    for a in ax:
+        a.axis('off')
+    return fig
+
+def highlight_3D(filename, num_slices=5, sliceIndex=0):
     im = Image.open(filename)
+    originalImage = im
     width, height = im.size
+
     if num_slices == "all":
         num_slices = im.n_frames
+
 
     # Lambda1 < Lambda2 < Lambda3
     Lambda1, Lambda2, Lambda3 = getEigs3D(filename, num_slices)
@@ -48,19 +65,17 @@ def highlight_3D(filename, num_slices, image_to_display):
 
     
     tempIm = im
+    originalImages = []
     images = []
-
-    # Ra = np.divide(np.absolute(Lambda2),np.absolute(Lambda3))
-    # Rb = np.divide(np.absolute(Lambda1),np.sqrt(np.absolute(np.multiply(Lambda1,Lambda2))))
-    # Rblob = np.divide(np.absolute(np.subtract(np.multiply(2, Lambda3), np.subtract(Lambda2, Lambda3))), np.absolute(Lambda3))
-    # S = np.add(Lambda3, np.add(Lambda2, Lambda1))
 
     print("Labeling Slices")
     bar = progressbar.ProgressBar(maxval=height*width*num_slices, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     bar.start()
+
     for z in range(num_slices):
         im = tempIm
         im.seek(z)
+        originalImages.append(im.copy())
         im.mode = 'I'
         im = im.point(lambda i:i*(1./256)).convert('RGB')
         for x in range(width-1):
@@ -81,11 +96,14 @@ def highlight_3D(filename, num_slices, image_to_display):
                 #     im.putpixel((y,x), (255, 0, 0)) #tube
                 bar.update(z*width*height+x*height+y)
         images.append(im)
+
     bar.finish()
-    return images
+    fig = getFig_3D(originalImages, images, sliceIndex)
+    
+    return originalImages, images, fig
     
 
-def highlight(fileName, page):
+def highlight_2D(fileName, page):
     im = Image.open(fileName)
     im.seek(page)
     #im=crop_center(im, 1050, 400)
@@ -174,3 +192,4 @@ def ui():
 
 if __name__ == "__main__":
     ui()
+
