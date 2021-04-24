@@ -26,10 +26,24 @@ def getEigs3D(filename, num_slices):
     Lambda1, Lambda2, Lambda3 = eng.get_eig_vals_3D(filename, num_slices, nargout=3)
     return Lambda1, Lambda2, Lambda3
 
-def highlight_3D(filename):
+def getFig_3D(originalImage, image, sliceIndex):
+    fig, ax = plt.subplots(ncols=2)
+    ax[0].imshow(originalImage[sliceIndex])
+    ax[0].set_title('Original Image')
+    ax[1].imshow(image[sliceIndex])
+    ax[1].set_title('Highlighted Image')
+    plt.axis('off')
+    plt.tight_layout()
+    
+    for a in ax:
+        a.axis('off')
+    return fig
+
+def highlight_3D(filename, num_slices=5, sliceIndex=0):
     im = Image.open(filename)
+    originalImage = im
     width, height = im.size
-    num_slices = 5 #im.n_frames
+    
     # cv2_im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     # eigVals, frangiImg = getEigs(cv2_im)
 
@@ -48,11 +62,13 @@ def highlight_3D(filename):
 
     
     tempIm = im
+    originalImages = []
     images = []
 
-    for z in range(1):
+    for z in range(num_slices):
         im = tempIm
         im.seek(z)
+        originalImages.append(im.copy())
         im.mode = 'I'
         im = im.point(lambda i:i*(1./256)).convert('RGB')
         for x in range(width-1):
@@ -69,17 +85,12 @@ def highlight_3D(filename):
                     tube += 1
         images.append(im)
 
-    im = images[0]
-
-
-    plt.imshow(im)
-    plt.title('Eigen highlighting')
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    fig = getFig_3D(originalImages, images, sliceIndex)
+    
+    return originalImages, images, fig
     
 
-def highlight(fileName, page):
+def highlight_2D(fileName, page):
     im = Image.open(fileName)
     im.seek(page)
     #im=crop_center(im, 1050, 400)
@@ -138,4 +149,4 @@ def highlight(fileName, page):
         a.axis('off')
     return fig
 
-highlight_3D("Best/STED HT1080 siCTRL. Decon_Series008_decon_z00_ch02.tif")
+#highlight_3D("Best/STED HT1080 siCTRL. Decon_Series008_decon_z00_ch02.tif")
