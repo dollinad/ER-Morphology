@@ -27,10 +27,11 @@ def getEigs3D(filename, num_slices):
     Lambda1, Lambda2, Lambda3 = eng.get_eig_vals_3D(filename, num_slices, nargout=3)
     return Lambda1, Lambda2, Lambda3
 
-def highlight_3D(filename):
+def highlight_3D(filename, num_slices, image_to_display):
     im = Image.open(filename)
     width, height = im.size
-    num_slices = 5 #im.n_frames
+    if num_slices == "all":
+        num_slices = im.n_frames
 
     # Lambda1 < Lambda2 < Lambda3
     Lambda1, Lambda2, Lambda3 = getEigs3D(filename, num_slices)
@@ -49,12 +50,10 @@ def highlight_3D(filename):
     tempIm = im
     images = []
 
-    avg3 = np.mean(np.true_divide(Lambda3.sum(1),(Lambda3!=0).sum(1)))
-    avg2 = np.mean(np.true_divide(Lambda2.sum(1),(Lambda2!=0).sum(1)))
-    avg1 = np.mean(np.true_divide(Lambda1.sum(1),(Lambda1!=0).sum(1)))
-    print(avg3)
-    print(avg2)
-    print(avg1)
+    # Ra = np.divide(np.absolute(Lambda2),np.absolute(Lambda3))
+    # Rb = np.divide(np.absolute(Lambda1),np.sqrt(np.absolute(np.multiply(Lambda1,Lambda2))))
+    # Rblob = np.divide(np.absolute(np.subtract(np.multiply(2, Lambda3), np.subtract(Lambda2, Lambda3))), np.absolute(Lambda3))
+    # S = np.add(Lambda3, np.add(Lambda2, Lambda1))
 
     print("Labeling Slices")
     bar = progressbar.ProgressBar(maxval=height*width*num_slices, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -67,39 +66,23 @@ def highlight_3D(filename):
         for x in range(width-1):
             for y in range(height-1):
                 # L1 < L2 < L3
+                # Ra1 = Ra[z, y, x]
+                # Rb1 = Rb[z, y, x]
+                # Rblob1 = Rblob[z, y, x]
                 L3 = Lambda3[z, y, x]
                 L2 = Lambda2[z, y, x]
                 L1 = Lambda1[z, y, x]
 
-                if abs(L3) > avg3*0.67 and abs(L2) > avg3*0.67 and abs(L1) > avg3*0.67:
-                    continue; # blob
-
-                #check tube / sheet conditions
-                threshold = 2
-                if math.isclose(abs(L1), 0, abs_tol=abs(0.3*L3)) and math.isclose(abs(L2), 0, abs_tol=abs(L3*0.3)) and im.getpixel((y,x)) != (0, 0, 0):
-                    im.putpixel((y, x), (0, 255, 0)) # tube
-                    tube += 1
-                # if abs(L3) > abs(L1)*2 and abs(L2) > abs(L1)*2 and L1*L2 > 0 and  im.getpixel((y,x)) != (0, 0, 0):
-                #     im.putpixel((y, x), (255, 0, 0)) # tube
-                #     tube += 1
+                # if Rb1 < 0.3:
+                #     continue 
+                if math.isclose(abs(L1), 0, abs_tol=abs(0.4*L3)) and math.isclose(abs(L2), 0, abs_tol=abs(L3*0.4)) and im.getpixel((y,x)) != (0, 0, 0):
+                    im.putpixel((y, x), (255, 0, 0)) # sheet
+                # if abs(Ra1  < 0.5 and abs(Rblob1 - 1) < 0.5 and im.getpixel((y,x)) != (0, 0, 0):
+                #     im.putpixel((y,x), (255, 0, 0)) #tube
                 bar.update(z*width*height+x*height+y)
         images.append(im)
     bar.finish()
-    im = images[3]
-
-    L3 = Lambda3[3, 1407, 1118]
-    L2 = Lambda2[3, 1407, 1118]
-    L1 = Lambda1[3, 1407, 1118]
-    print(L3)
-    print(L2)
-    print(L1)
-
-
-    plt.imshow(im)
-    plt.title('Eigen highlighting')
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    return images
     
 
 def highlight(fileName, page):
@@ -131,17 +114,17 @@ def highlight(fileName, page):
     L3_list=[]
     for x in range(height):
         for y in range(width):
-            L3 = eigVals[0, x, y]
+            L1 = eigVals[0, x, y]
             L2 = eigVals[1, x, y]
+            L1_list.append(L1)
             L2_list.append(L2)
-            L3_list.append(L3)
-            # HH = (L3 >= highVal) and (L2 >= highVal)
-            # HH2 = (L3 <= -highVal) and (L2 <= -highVal)
-            # HL = (L3 >= highVal) and (L2 < lowVal or L2 > -lowVal)
-            # HL2 = (L3 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
-            if ((abs(L3) < abs(L2)) and (L3>0)):
-                im.putpixel((y, x), (255, 0, 0)) # tube
+            if ((abs(L1) < abs(L2)) and (L2<0)):
+                im.putpixel((y, x), (255, 0, 0)) # tube bright red 
                 tube += 1
+            if((abs(L1) > 0.002 and abs(L2 > 0.002)) and (L1<0 and L2<0)):
+                im.putpixel((y, x), (255, 255, 51)) # tube dark yellow
+            if((abs(L1) > 0.002 and abs(L2 > 0.002)) and (L1>0 and L2>0)):
+                im.putpixel((y, x), (255, 255, 51)) # tube dark yellow
 
 
     kwargs = dict(alpha=0.5, bins=1000)
@@ -161,4 +144,33 @@ def highlight(fileName, page):
         a.axis('off')
     return fig
 
-highlight_3D("Best/STED HT1080 siCTRL. Decon_Series008_decon_z00_ch02.tif")
+def ui():
+    # filePath = input("Path to tif file: ")
+    # dimension = input("2D or 3D? (2/3): ")
+
+    # if dimension == "3":
+    #     num_slices = int(input("Number of slices to process: "))
+    #     image_to_display = int(input("Slice to display: "))
+    #     if image_to_display > num_slices:
+    #         print("Image out of range")
+    #         return
+    #     highlight_3D(filePath, num_slices, image_to_display)
+    # elif dimension == "2":
+    #     image_to_display = input("Slice to display: ")
+    #     highlight(filePath, image_to_display)
+    images = highlight_3D("Best/good one.tif", 5, 1)
+    user_input = 1
+    while(user_input != -1):
+        im = images[user_input]
+
+        plt.imshow(im)
+        plt.title('Eigen highlighting')
+        plt.axis('off')
+        plt.tight_layout()
+        plt.show()
+
+        user_input = int(input("Image to display (-1 to exit): "))
+
+
+if __name__ == "__main__":
+    ui()
