@@ -1,0 +1,19 @@
+ ----  REQUIREMENTS ---- 
+
+Install Matlab Engine
+
+- Must be running python 3.8
+- Matlab engine installation can be found at: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+
+Python Dependancies
+
+- Install using: pip install -r pip-requirements.txt
+
+
+Data Set
+
+- Download from: https://vault.sfu.ca/index.php/s/GbPAXWICEl4gCwX
+
+Running Script
+
+` python3.8 eigen.py ' 

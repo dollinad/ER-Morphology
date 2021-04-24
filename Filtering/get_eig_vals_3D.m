@@ -13,14 +13,8 @@ for a=1:numImgs
     vol(:,:,a) = img2D;
 end
 
-%figure(1);
-
 disp("Calculating Hessian Matrix");
 [Dxx, Dyy, Dzz, Dxy, Dxz, Dyz] = Hessian3D(vol, 1);
 disp("Calculating Eigenvalues");
 [Lambda1,Lambda2,Lambda3,Vx,Vy,Vz]=eig3volume(Dxx,Dxy,Dxz,Dyy,Dyz,Dzz);
-
-%slice(vol, round(size(vol,2)/2), round(size(vol,1)/2), round(size(vol,3)/2));
-%axis image; colormap gray;
-%shading flat;   
-disp("--- Exiting Matlab Calculations --- ")
+disp("--- Exiting Matlab  --- ")

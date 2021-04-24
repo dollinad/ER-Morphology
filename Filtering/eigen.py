@@ -10,6 +10,7 @@ import os
 import cv2
 import math
 import statistics
+import progressbar
 eng = matlab.engine.start_matlab()
 
 
@@ -30,8 +31,6 @@ def highlight_3D(filename):
     im = Image.open(filename)
     width, height = im.size
     num_slices = 5 #im.n_frames
-    # cv2_im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    # eigVals, frangiImg = getEigs(cv2_im)
 
     # Lambda1 < Lambda2 < Lambda3
     Lambda1, Lambda2, Lambda3 = getEigs3D(filename, num_slices)
@@ -50,7 +49,17 @@ def highlight_3D(filename):
     tempIm = im
     images = []
 
-    for z in range(1):
+    avg3 = np.mean(np.true_divide(Lambda3.sum(1),(Lambda3!=0).sum(1)))
+    avg2 = np.mean(np.true_divide(Lambda2.sum(1),(Lambda2!=0).sum(1)))
+    avg1 = np.mean(np.true_divide(Lambda1.sum(1),(Lambda1!=0).sum(1)))
+    print(avg3)
+    print(avg2)
+    print(avg1)
+
+    print("Labeling Slices")
+    bar = progressbar.ProgressBar(maxval=height*width*num_slices, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    bar.start()
+    for z in range(num_slices):
         im = tempIm
         im.seek(z)
         im.mode = 'I'
@@ -62,14 +71,28 @@ def highlight_3D(filename):
                 L2 = Lambda2[z, y, x]
                 L1 = Lambda1[z, y, x]
 
+                if abs(L3) > avg3*0.67 and abs(L2) > avg3*0.67 and abs(L1) > avg3*0.67:
+                    continue; # blob
+
                 #check tube / sheet conditions
                 threshold = 2
-                if math.isclose(abs(L1), 0, abs_tol=abs(0.4*L3)) and math.isclose(abs(L2), 0, abs_tol=abs(L3*0.4)) and im.getpixel((y,x)) != (0, 0, 0):
-                    im.putpixel((y, x), (255, 0, 0)) # tube
+                if math.isclose(abs(L1), 0, abs_tol=abs(0.3*L3)) and math.isclose(abs(L2), 0, abs_tol=abs(L3*0.3)) and im.getpixel((y,x)) != (0, 0, 0):
+                    im.putpixel((y, x), (0, 255, 0)) # tube
                     tube += 1
+                # if abs(L3) > abs(L1)*2 and abs(L2) > abs(L1)*2 and L1*L2 > 0 and  im.getpixel((y,x)) != (0, 0, 0):
+                #     im.putpixel((y, x), (255, 0, 0)) # tube
+                #     tube += 1
+                bar.update(z*width*height+x*height+y)
         images.append(im)
+    bar.finish()
+    im = images[3]
 
-    im = images[0]
+    L3 = Lambda3[3, 1407, 1118]
+    L2 = Lambda2[3, 1407, 1118]
+    L1 = Lambda1[3, 1407, 1118]
+    print(L3)
+    print(L2)
+    print(L1)
 
 
     plt.imshow(im)
