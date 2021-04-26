@@ -17,6 +17,4 @@ Data Set
 
 - Download from: https://vault.sfu.ca/index.php/s/GbPAXWICEl4gCwX
 
-Running Script
-
-` python3.8 eigen.py ' 
+See README.md for more info on running our code
