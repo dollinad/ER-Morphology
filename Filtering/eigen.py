@@ -7,6 +7,7 @@ Description: File containing all highlighting operations and console UI
 # Sci-kit image imports
 from skimage.filters import frangi, hessian
 from skimage import io, feature
+from sklearn.cluster import KMeans
 
 from PIL import Image
 import numpy as np
@@ -14,6 +15,7 @@ import matplotlib.pyplot as plt
 import random
 import matlab.engine
 import os
+import time
 import cv2
 import math
 import statistics
@@ -21,20 +23,18 @@ import progressbar
 
 # Engine for MATLAB
 eng = matlab.engine.start_matlab()
-
+    
 """
 getEigs_2D(image)
     - Returns the eigenvalues generated from an image
     - Intended to be used for 2D highlighting
 """
-def getEigs_2D(image):
-    # Convolves the image with the second derivatives of the Gaussian to compute the Hessian matrix
-    H_elems = feature.hessian_matrix(image, sigma=1, mode='constant', cval=0, order='rc')
-    
-    # Computes the eigenvalues of the Hessian matrix and returns them in decreasing order
+def getEigs_2D(im):
+    I = np.array(im)
+    frangiImg = frangi(I)
+    H_elems = feature.hessian_matrix(frangiImg, sigma=1, mode='constant', cval=0, order='rc')
     eigVals = feature.hessian_matrix_eigvals(H_elems)
-    
-    return eigVals
+    return eigVals, frangiImg
 
 """
 getEigs_3D(im, num_slices)
@@ -73,7 +73,6 @@ highlight_3D(filename, num_slices, sliceIndex)
     - Loads num_slices of an image from filename
     - Highlights sheets and tubes of a 3D image
 """
-
 def highlight_3D(filename, method, num_slices=5, sliceIndex=0):
     # Image is loaded
     im = Image.open(filename)
@@ -148,65 +147,140 @@ highlight_2D(filename, page)
 def highlight_2D(fileName, page):
     im = Image.open(fileName)
     im.seek(page)
-    
-    # Image is converted to RGB so it may be drawn on
+    original = im.copy()
     tempIm = im.copy()
     tempIm.mode = 'I'
     tempIm = tempIm.point(lambda i:i*(1./256)).convert('RGB')
-
-    # Eigenvalues are calculated
     eigVals, frangiImg = getEigs_2D(im)
-    im = tempIm
-    original = tempIm.copy()
     width, height = im.size
-
     
-    # Counting the number of tubes and sheets
-    tube = 0
-    sheet = 0
-
-    """
-    L, L => no structure just noise
-    H-, L OR H+, L => sheet like
-    H+, H+ OR H-, H- => tube like
+    im = tempIm
     
-    histogram
-    => look at distribution of lambda
-    L is very close to zero
-    H- is farther from zero, but negative
-    H+ is closer to zero, but positive
-    """
-     # Eigenvalues at each pixel are assessed
-    for x in range(height):
-        for y in range(width):
-            L3 = eigVals[0, x, y]
+    # Thresholds to change
+    highVal = 3.31E-7
+    lowVal = -2.11E-7
+    
+    L1_list=[]
+    L2_list=[]
+    
+    for x in range(width):
+        for y in range(height):
+            L1 = eigVals[0, x, y]
             L2 = eigVals[1, x, y]
             
-            highVal = 1E-7
-            lowVal = 1E-12
-
-            HH = (L3 >= highVal) and (L2 >= highVal)
-            HH2 = (L3 <= -highVal) and (L2 <= -highVal)
-
-            HL = (L3 >= highVal) and (L2 < lowVal or L2 > -lowVal)
-            HL2 = (L3 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
-
-            if HH or HH2:
+            L1_list.append(L1)
+            L2_list.append(L2)
+            
+            HH = (L1 >= highVal) and (L2 >= highVal)
+            HH2 = (L1 <= -highVal) and (L2 <= -highVal)
+            HL = (L1 >= highVal) and (L2 < lowVal or L2 > -lowVal)
+            HL2 = (L1 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
+            
+            if (HH or HH2 and (im.getpixel((y,x))!=(0,0,0))):
                 im.putpixel((y, x), (255, 0, 0)) # tube
-                tube += 1
-            elif HL or HL2:
+            elif ((HL or HL2) and (im.getpixel((y,x))!=(0,0,0))) :
                 im.putpixel((y, x), (0, 255, 0)) # sheet
-                sheet += 1
 
     # Plot showcasing the created images is shown
-    fig, ax = plt.subplots(ncols=3)
+    fig, ax = plt.subplots(ncols=2)
     ax[0].imshow(original)
     ax[0].set_title('Original Image')
-    ax[1].imshow(frangiImg)
-    ax[1].set_title('Frangi Image')
-    ax[2].imshow(im)
-    ax[2].set_title('Eigen highlighting')
-    plt.show()
+    ax[1].imshow(im)
+    ax[1].set_title('Eigen Highlighting')
+    
+    for a in ax:
+        a.axis('off')
+        
+    return fig
+
+def highlight_2D_KNN(fileName, page):
+    im = Image.open(fileName)
+    im.seek(page)
+    original = im.copy()
+    tempIm = im.copy()
+    tempIm.mode = 'I'
+    tempIm = tempIm.point(lambda i:i*(1./256)).convert('RGB')
+    eigVals, frangiImg = getEigs_2D(im)
+    width, height = im.size
+    
+    im = tempIm
+    original = tempIm.copy()
+    
+    # Thresholds to change
+    highVal = 3.31E-7
+    lowVal = -2.11E-7
+    
+    L1_list=[]
+    L2_list=[]
+    
+    for x in range(width):
+        for y in range(height):
+            L1 = eigVals[0, x, y]
+            L2 = eigVals[1, x, y]
+            
+            L1_list.append(L1)
+            L2_list.append(L2)
+            
+            HH = (L1 >= highVal) and (L2 >= highVal)
+            HH2 = (L1 <= -highVal) and (L2 <= -highVal)
+            HL = (L1 >= highVal) and (L2 < lowVal or L2 > -lowVal)
+            HL2 = (L1 <= -highVal) and (L2 < lowVal or L2 > -lowVal)
+            
+            if (HH or HH2 and (im.getpixel((y,x))!=(0,0,0))):
+                im.putpixel((y, x), (255, 0, 0)) # tube
+            elif ((HL or HL2) and (im.getpixel((y,x))!=(0,0,0))) :
+                im.putpixel((y, x), (0, 255, 0)) # sheet
+    
+    plt.imshow(im)
+    plt.axis('off')
+    plt.savefig('plot.png')
+    
+    imfrangii = frangiImg
+    time.sleep(2)
+    ## Extended code from https://github.com/AbhinavUtkarsh/Image-Segmentation.git
+    image1 = cv2.imread("plot.png")
+    
+    image = [image1]
+    reshaped=[0]
+    for i in range(0,1):
+        reshaped[i] = image[i].reshape(image[i].shape[0] * image[i].shape[1], image[i].shape[2])
+
+    # Number of clusters = 4, (background pixels, backgrund from plt, tubes and sheets)
+    numClusters=[4]
+
+    # KNN Code 
+    clustering=[0]
+    for i in range(0,1):
+        kmeans = KMeans(n_clusters=numClusters[i], n_init=40, max_iter=500).fit(reshaped[i])
+        clustering[i] = np.reshape(np.array(kmeans.labels_, dtype=np.uint8),
+        (image[i].shape[0], image[i].shape[1]))
+
+    sortedLabels=[[]]
+    for i in range(0,1):
+        sortedLabels[i] = sorted([n for n in range(numClusters[i])],
+            key=lambda x: -np.sum(clustering[i] == x))
+
+    kmeansImage=[0]
+    concatImage=[[]]
+    
+    for j in range(0,1):
+        kmeansImage[j] = np.zeros(image[j].shape[:2], dtype=np.uint8)
+        for i, label in enumerate(sortedLabels[j]):
+            kmeansImage[j][ clustering[j] == label ] = int((255) / (numClusters[j] - 1)) * i
+        concatImage[j] = np.concatenate((image[j],193 * np.ones((image[j].shape[0], int(0.0625 * image[j].shape[1]), 3), dtype=np.uint8),cv2.cvtColor(kmeansImage[j], cv2.COLOR_GRAY2BGR)), axis=1)
+
+    
+    ## Extended code from https://github.com/AbhinavUtkarsh/Image-Segmentation.git
+    imageOut = cv2.imwrite("plot.png", concatImage[0])
+    time.sleep(2)
+    imageSaved = cv2.imread("plot.png")
+    
+    # Plot showcasing the created images is shown
+    fig, ax = plt.subplots(ncols=2)
+    ax[0].imshow(original)
+    ax[0].set_title('Original Image')
+    ax[1].imshow(imageSaved)
+    ax[1].set_title('KNN Image')
     
     for a in ax:
         a.axis('off')

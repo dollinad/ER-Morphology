@@ -1,5 +1,5 @@
 """
-Filename: gui.py
+Filename: gui3d.py
 Authors: C. Way, D. Dodani, D. Lekovic, S. Ghorpade
 Description: File containing graphical user interface for highlighting of 3D images
 """
@@ -26,7 +26,7 @@ class ERGui(tk.Tk):
         super().__init__()
         self.canvas = tk.Canvas(self)
         self.canvas.pack()
-        self.wm_title("Endoplasmic Reticulum Morphology")
+        self.wm_title("Endoplasmic Reticulum Morphology (3D)")
         
         # Most recent filepath
         self.currentPath = ""
@@ -42,8 +42,13 @@ class ERGui(tk.Tk):
         
         # Current slice index
         self.currentSlice = 0
-
         
+        # The method used; Ratios initially     
+        # Variable for method selection radiobuttons
+        self.methodChoice = tk.IntVar()
+        self.methodChoice.set(1)
+        
+        # Current method being used
         self.method = "ratios"
         
         # Button for selecting a .TIF file
@@ -51,6 +56,17 @@ class ERGui(tk.Tk):
         self.selectBtnLabel.set("Select ER .tif")
         self.selectBtn = tk.Button(self.canvas, textvariable=self.selectBtnLabel, width=45, command=lambda: self.openDialog(self.selectBtn))
         self.selectBtn.pack(side=tk.TOP, padx=6, pady=2)
+        
+        # Label for radiobuttons
+        self.methodLbl = tk.Label(self.canvas, text="Select a 3D method:", justify=tk.LEFT, padx=20)
+        self.methodLbl.pack()
+        
+        # Radiobuttons created
+        self.ratioBtn = tk.Radiobutton(self.canvas, text="Ratios", padx=20, variable=self.methodChoice, value=1)
+        self.ratioBtn.pack(anchor=tk.W)
+        
+        self.closenessBtn = tk.Radiobutton(self.canvas, text="Closeness", padx=20, variable=self.methodChoice, value=2)
+        self.closenessBtn.pack(anchor=tk.W)
         
         # Slider for selecting load amount
         self.sliceLoadSlider = Scale(self.canvas, from_=0, to=10, length=250, orient=HORIZONTAL)
@@ -68,12 +84,41 @@ class ERGui(tk.Tk):
         - Opens a file dialogue for user to select TIF
     """
     def openDialog(self, widget):
-        filename = askopenfilename()
-        
         if len(self.images) == 0:
+            filename = askopenfilename()
             self.initialize(filename)
         else:
-            self.execute(filename)
+            # Restore everything
+            self.methodChoice.set(1)
+            self.method = "ratios"
+            self.methodLbl = tk.Label(self.canvas, text="Select a 3D method:", justify=tk.LEFT, padx=20)
+            self.methodLbl.pack()
+            
+            self.ratioBtn = tk.Radiobutton(self.canvas, text="Ratios", padx=20, variable=self.methodChoice, value=1)
+            self.ratioBtn.pack(anchor=tk.W)
+        
+            self.closenessBtn = tk.Radiobutton(self.canvas, text="Closeness", padx=20, variable=self.methodChoice, value=2)
+            self.closenessBtn.pack(anchor=tk.W)
+            
+            self.sliceLoadSlider.destroy()
+            self.sliceSlider.destroy()
+            self.sliceSlider.destroy()
+            self.figure.get_tk_widget().destroy()
+            self.selectLoadLabel.destroy()
+            self.selectLabel.destroy()
+            
+            # Slider for selecting load amount
+            self.sliceLoadSlider = Scale(self.canvas, from_=0, to=10, length=250, orient=HORIZONTAL)
+            self.sliceLoadSlider.set(3)
+            self.sliceLoadSlider.bind("<ButtonRelease-1>", self.setLoad)
+        
+            # Slider for selecting slice index
+            self.sliceSlider = Scale(self.canvas, from_=0, to=4, length=250, orient=HORIZONTAL)
+            self.sliceSlider.set(0)
+            self.sliceSlider.bind("<ButtonRelease-1>", self.setSlices)
+        
+            self.images = []
+            self.selectBtnLabel.set("Select ER .tif")
     
     def setLoad(self, val):
         self.slices = self.sliceLoadSlider.get()
@@ -88,7 +133,17 @@ class ERGui(tk.Tk):
     """
     def initialize(self, path):
         # 3D highlighting occurs
+        
+        if self.methodChoice.get() == 1:
+            self.method = "ratios"
+        else:
+            self.method = "closeness"
+        
         originalImgs, imgs, fig = eigen.highlight_3D(path, self.method, self.slices, self.currentSlice)
+        
+        self.ratioBtn.destroy()
+        self.closenessBtn.destroy()
+        self.methodLbl.destroy()
         
         # Properties are updated
         self.images = imgs
@@ -123,6 +178,12 @@ class ERGui(tk.Tk):
     """
     def execute(self, path):
         # 3D highlighting occurs
+        
+        if self.methodChoice.get() == 1:
+            self.method = "ratios"
+        else:
+            self.method = "closeness"
+        
         originalImgs, imgs, fig = eigen.highlight_3D(path, self.method, self.slices, self.currentSlice)
         
         # Properties are updated
@@ -134,6 +195,7 @@ class ERGui(tk.Tk):
         self.sliceSlider.configure(to=(len(self.images) - 1))
         
         # A figure is created to draw matplotlib figures on the screen
+        self.figure.get_tk_widget().destroy()
         self.figure = FigureCanvasTkAgg(fig, self)
         self.figure.draw()
         self.figure.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -146,7 +208,6 @@ class ERGui(tk.Tk):
         # If the slide selected is different than the one we are currently on
         if self.sliceSlider.get() != self.currentSlice:
             # Everything is erased
-            self.figure.get_tk_widget().destroy()
             self.currentSlice = self.sliceSlider.get()
         
             if len(self.images) == 0:
@@ -156,6 +217,7 @@ class ERGui(tk.Tk):
             fig = eigen.getFig_3D(self.originalImages, self.images, self.currentSlice)
             
             # A figure is created to draw matplotlib figures on the screen
+            self.figure.get_tk_widget().destroy()
             self.figure = FigureCanvasTkAgg(fig, self)
             self.figure.draw()
             self.figure.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
