@@ -4,10 +4,11 @@ Authors: C. Way, D. Dodani, D. Lekovic, S. Ghorpade
 Description: File containing all highlighting operations and console UI
 """
 
+# Sci-kit image imports
 from skimage.filters import frangi, hessian
+from skimage import io, feature
+
 from PIL import Image
-from skimage import io
-from skimage import feature
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -17,8 +18,9 @@ import cv2
 import math
 import statistics
 import progressbar
-eng = matlab.engine.start_matlab()
 
+# Engine for MATLAB
+eng = matlab.engine.start_matlab()
 
 """
 getEigs_2D(image)
@@ -51,7 +53,6 @@ getFig_3D(originalImage, image, sliceIndex)
     - Shows original image at a slice index
     - Show highlighted image at a slice index
 """
-
 def getFig_3D(originalImage, image, sliceIndex):
     fig, ax = plt.subplots(ncols=2)
     ax[0].imshow(originalImage[sliceIndex])
@@ -63,6 +64,7 @@ def getFig_3D(originalImage, image, sliceIndex):
     
     for a in ax:
         a.axis('off')
+        
     return fig
 
 """
@@ -88,7 +90,6 @@ def highlight_3D(filename, method, num_slices=5, sliceIndex=0):
     Lambda1 = np.array(Lambda1._data).reshape((num_slices, width, height))
     Lambda2 = np.array(Lambda2._data).reshape((num_slices, width, height))
     Lambda3 = np.array(Lambda3._data).reshape((num_slices, width, height))
-
     # Lists containing original images and highlighted images
     originalImages = []
     images = []
@@ -206,11 +207,16 @@ def highlight_2D(fileName, page):
     ax[2].imshow(im)
     ax[2].set_title('Eigen highlighting')
     plt.show()
+    
     for a in ax:
         a.axis('off')
+        
     return fig
 
-# CLI for testing eigen.py
+"""
+ui()
+    - User interface for loading TIF files from the console
+"""
 def ui():
     filePath = input("Path to tif file: ")
     dimension = input("2D or 3D? (2/3): ")
