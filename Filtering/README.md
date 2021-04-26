@@ -1,4 +1,9 @@
 # ER-Morphology
+### Contributers
+Cameron Way (301370655)  
+Dollina Dodani (301305914)   
+Danilo Lekovic (301388110)  
+Saniya Ghorpade (301336699)    
 
 ## How to run our code
 1. Install necessary dependencies and libraries using the requirements.txt
