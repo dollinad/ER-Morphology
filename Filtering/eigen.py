@@ -231,8 +231,8 @@ def highlight_2D_KNN(fileName, page):
             elif ((HL or HL2) and (im.getpixel((y,x))!=(0,0,0))) :
                 im.putpixel((y, x), (0, 255, 0)) # sheet
     
-    plt.imshow(im)
     plt.axis('off')
+    plt.style.use("dark_background")
     plt.savefig('plot.png')
     
     imfrangii = frangiImg
@@ -276,14 +276,9 @@ def highlight_2D_KNN(fileName, page):
     imageSaved = cv2.imread("plot.png")
     
     # Plot showcasing the created images is shown
-    fig, ax = plt.subplots(ncols=2)
-    ax[0].imshow(original)
-    ax[0].set_title('Original Image')
-    ax[1].imshow(imageSaved)
-    ax[1].set_title('KNN Image')
-    
-    for a in ax:
-        a.axis('off')
+    fig, ax = plt.subplots()
+    ax.imshow(imageSaved)
+    ax.set_title('KNN Image')
         
     return fig
 

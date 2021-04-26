@@ -34,11 +34,6 @@ class ERGui(tk.Tk):
         # Current slice index
         self.currentSlice = 0
         
-        # The method used; Ratios initially     
-        # Variable for method selection radiobuttons
-        self.methodChoice = tk.IntVar()
-        self.methodChoice.set(1)
-        
         # Current method being used
         self.method = "thresholds"
         
@@ -47,17 +42,6 @@ class ERGui(tk.Tk):
         self.selectBtnLabel.set("Select ER .tif")
         self.selectBtn = tk.Button(self.canvas, textvariable=self.selectBtnLabel, width=45, command=lambda: self.openDialog(self.selectBtn))
         self.selectBtn.pack(side=tk.TOP, padx=6, pady=2)
-        
-        # Label for radiobuttons
-        self.methodLbl = tk.Label(self.canvas, text="Select a 2D method:", justify=tk.LEFT, padx=20)
-        self.methodLbl.pack()
-        
-        # Radiobuttons created
-        self.ratioBtn = tk.Radiobutton(self.canvas, text="Thresholds", padx=20, variable=self.methodChoice, value=1)
-        self.ratioBtn.pack(anchor=tk.W)
-        
-        self.closenessBtn = tk.Radiobutton(self.canvas, text="KNN", padx=20, variable=self.methodChoice, value=2)
-        self.closenessBtn.pack(anchor=tk.W)
         
         # Slider for selecting slice index
         self.sliceSlider = Scale(self.canvas, from_=0, to=4, length=250, orient=HORIZONTAL)
@@ -70,33 +54,8 @@ class ERGui(tk.Tk):
         - Opens a file dialogue for user to select TIF
     """
     def openDialog(self, widget):
-        if len(self.currentPath) == 0:
-            filename = askopenfilename()
-            self.initialize(filename)
-        else:
-            # Restore everything
-            self.methodChoice.set(1)
-            self.method = "thresholds"
-            self.methodLbl = tk.Label(self.canvas, text="Select a 2D method:", justify=tk.LEFT, padx=20)
-            self.methodLbl.pack()
-            
-            self.ratioBtn = tk.Radiobutton(self.canvas, text="Thresholds", padx=20, variable=self.methodChoice, value=1)
-            self.ratioBtn.pack(anchor=tk.W)
-        
-            self.closenessBtn = tk.Radiobutton(self.canvas, text="KNN", padx=20, variable=self.methodChoice, value=2)
-            self.closenessBtn.pack(anchor=tk.W)
-            
-            self.sliceSlider.destroy()
-            self.figure.get_tk_widget().destroy()
-            self.selectLabel.destroy()
-        
-            # Slider for selecting slice index
-            self.sliceSlider = Scale(self.canvas, from_=0, to=4, length=250, orient=HORIZONTAL)
-            self.sliceSlider.set(0)
-            self.sliceSlider.bind("<ButtonRelease-1>", self.setSlices)
-            
-            self.currentPath = ""
-            self.selectBtnLabel.set("Select ER .tif")
+        filename = askopenfilename()
+        self.initialize(filename)
     
     """
     initialize(self, path)
@@ -106,20 +65,7 @@ class ERGui(tk.Tk):
     """
     def initialize(self, path):
         # 2D highlighting occurs
-        
-        if self.methodChoice.get() == 1:
-            self.method = "thresholds"
-        else:
-            self.method = "knn"
-        
-        if self.method == "knn":
-            fig = eigen.highlight_2D_KNN(path, self.currentSlice)
-        else:
-            fig = eigen.highlight_2D(path, self.currentSlice)
-        
-        self.ratioBtn.destroy()
-        self.closenessBtn.destroy()
-        self.methodLbl.destroy()
+        fig = eigen.highlight_2D(path, self.currentSlice)
         
         # Properties are updated
         self.currentPath = path
@@ -149,15 +95,7 @@ class ERGui(tk.Tk):
     def execute(self, path):
         # 2D highlighting occurs
         
-        if self.methodChoice.get() == 1:
-            self.method = "thresholds"
-        else:
-            self.method = "knn"
-        
-        if self.method == "knn":
-            fig = eigen.highlight_2D_KNN(path, self.currentSlice)
-        else:
-            fig = eigen.highlight_2D(path, self.currentSlice)
+        fig = eigen.highlight_2D(path, self.currentSlice)
                 
         # Properties are updated
         self.currentPath = path

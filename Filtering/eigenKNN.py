@@ -67,7 +67,7 @@ def highlight(fileName, page):
 
     
 #imfrangii=highlight('__STED HT1080 siCTRL. Decon_Series005_decon_z00_ch02.tif', 7)
-imfrangii=highlight('sample1.tif', 7)
+imfrangii=highlight('sample5.tif', 7)
 
 
 ## Extended code from https://github.com/AbhinavUtkarsh/Image-Segmentation.git
@@ -98,18 +98,16 @@ for j in range(0,1):
     kmeansImage[j] = np.zeros(image[j].shape[:2], dtype=np.uint8)
     for i, label in enumerate(sortedLabels[j]):
         kmeansImage[j][ clustering[j] == label ] = int((255) / (numClusters[j] - 1)) * i
-    concatImage[j] = np.concatenate((image[j],193 * np.ones((image[j].shape[0], int(0.0625 * image[j].shape[1]), 3), dtype=np.uint8),cv2.cvtColor(kmeansImage[j], cv2.COLOR_GRAY2BGR)), axis=1)
+    concatImage[j] = (cv2.cvtColor(kmeansImage[j], cv2.COLOR_GRAY2BGR))
 
 
-for i in range(0,1):
-    dt = datetime.datetime.now()
-    fileExtension = "png"
-    filename = (str(dt.hour)
-        + ':'+str(dt.minute) + ':'+str(dt.second)
-        + ' C_' + str(numClusters[i]) + '.' + fileExtension)
-    print(filename)
-    time.sleep(1)
-    cv2.imwrite(filename, concatImage[i])
-
-
-highlight("../Filtering/Best/good one.tif", 1)
+# for i in range(0,1):
+#     dt = datetime.datetime.now()
+#     fileExtension = "png"
+#     filename = (str(dt.hour)
+#         + ':'+str(dt.minute) + ':'+str(dt.second)
+#         + ' C_' + str(numClusters[i]) + '.' + fileExtension)
+#     print(filename)
+#     time.sleep(1)
+cv2.imshow("Image", mat=concatImage[0])
+cv2.waitKey(0)
