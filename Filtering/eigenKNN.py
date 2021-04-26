@@ -67,7 +67,9 @@ def highlight(fileName, page):
 
     
 #imfrangii=highlight('__STED HT1080 siCTRL. Decon_Series005_decon_z00_ch02.tif', 7)
-imfrangii=highlight('sample5.tif', 7)
+filename = input("Please enter sample name with .tif extension (eg sample2.tif): ")
+frame = int(input("Please enter frame that you want to process (an integer from 1 to 10: "))
+imfrangii=highlight(filename, frame)
 
 
 ## Extended code from https://github.com/AbhinavUtkarsh/Image-Segmentation.git
@@ -98,7 +100,7 @@ for j in range(0,1):
     kmeansImage[j] = np.zeros(image[j].shape[:2], dtype=np.uint8)
     for i, label in enumerate(sortedLabels[j]):
         kmeansImage[j][ clustering[j] == label ] = int((255) / (numClusters[j] - 1)) * i
-    concatImage[j] = (cv2.cvtColor(kmeansImage[j], cv2.COLOR_GRAY2BGR))
+    concatImage[j] = np.concatenate((image[j],193 * np.ones((image[j].shape[0], int(0.0625 * image[j].shape[1]), 3), dtype=np.uint8),cv2.cvtColor(kmeansImage[j], cv2.COLOR_GRAY2BGR)), axis=1)
 
 
 # for i in range(0,1):
@@ -110,4 +112,6 @@ for j in range(0,1):
 #     print(filename)
 #     time.sleep(1)
 cv2.imshow("Image", mat=concatImage[0])
-cv2.waitKey(0)
+cv2.waitKey(50000)
+cv2.destroyAllWindows()
+
