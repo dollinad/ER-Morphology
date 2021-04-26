@@ -1,13 +1,15 @@
- ----  REQUIREMENTS ---- 
+----  REQUIREMENTS ---- 
 
 Install Matlab Engine
 
 - Must be running python 3.8
 - Matlab engine installation can be found at: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+- Compile eig3volume by opening 'Filtering' directory in Matlab and running: `mex eig3volume.c`
 
 Python Dependancies
 
-- Install using: pip install -r pip-requirements.txt
+- Change to 'Filtering' directory in terminal
+- Install using: `pip3.8 install -r pip-requirements.txt`
 
 
 Data Set
