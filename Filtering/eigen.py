@@ -157,8 +157,8 @@ def highlight_2D(fileName, page):
     im = tempIm
     
     # Thresholds to change
-    highVal = 3.31E-7
-    lowVal = -2.11E-7
+    highVal = 1E-7
+    lowVal = 1E-12
     
     L1_list=[]
     L2_list=[]
