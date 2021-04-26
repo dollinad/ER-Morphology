@@ -8,7 +8,7 @@ Install Matlab Engine
 
 Python Dependancies
 
-- Change to 'Filtering' directory in terminal
+- Change to this directory in terminal
 - Install using: `pip3.8 install -r pip-requirements.txt`
 
 
