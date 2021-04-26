@@ -17,3 +17,4 @@ Data Set
 
 - Download from: https://vault.sfu.ca/index.php/s/GbPAXWICEl4gCwX
 
+See README.md for more info on running our code
